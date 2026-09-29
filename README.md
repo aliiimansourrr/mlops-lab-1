@@ -1,4 +1,5 @@
-Question 1
+## Lab 1
+## Question 1
 
 After running uv init, the following files and folders were created:
 
@@ -9,7 +10,7 @@ src/: contains the Python source code of the project.
 
 These files create the basic structure needed to manage the Python project with uv
 
-Question 2
+## Question 2
 
 Running `dvc init` creates the files needed to initialize DVC inside the Git repository.
 
@@ -19,7 +20,7 @@ Running `dvc init` creates the files needed to initialize DVC inside the Git rep
 
 The configuration files should be pushed to Git because they allow other developers to reproduce the DVC setup. However, DVC cache files, temporary files, and files containing private credentials should not be pushed to Git.
 
-Question 3
+## Question 3
 
 Because the `--global` option is used, the DVC remote credentials are stored in the user's global DVC configuration, outside the Git repository.
 
@@ -31,7 +32,7 @@ Other configuration options include:
 
 Credentials should never be pushed to GitHub because they are private information such as usernames, passwords, or access tokens.
 
-Question 4
+## Question 4
 
 After running `dvc add data`, DVC added `/data` to the `.gitignore` file.
 
@@ -96,3 +97,54 @@ disappeared from the `data` folder.
 Only the older tracked dataset, `food11_raw`, remained.
 
 This shows that Git controls which version of the `data.dvc` pointer file is active, while DVC updates the actual data in the workspace to match that version.
+
+## Lab 2 
+
+## Question 1
+After running:
+
+`uv add mlflow torch torchvision scikit-learn`
+
+the `pyproject.toml` file was updated with the new direct dependencies required for model training and experiment tracking:
+
+- `mlflow`
+- `torch`
+- `torchvision`
+- `scikit-learn`
+
+Because this computer does not have an NVIDIA GPU, I also configured a CPU-only PyTorch package source in `pyproject.toml`.
+
+The `uv.lock` file was also updated. It contains the exact resolved versions of the direct dependencies and all of their transitive dependencies, together with information such as package sources and hashes.
+
+The purpose of `pyproject.toml` is mainly to describe the dependencies required by the project, while `uv.lock` locks the exact resolved dependency versions so that the environment can be reproduced consistently.
+
+## Question 2
+
+`--backend-store-uri` defines where MLflow stores the tracking metadata for experiments and runs.
+
+In this lab:
+
+`sqlite:///mlflow.db`
+
+means that MLflow stores the tracking metadata in a local SQLite database file named `mlflow.db`.
+
+This metadata includes information such as:
+- experiment names
+- run IDs
+- parameters
+- metrics
+- tags
+- timestamps
+- artifact locations
+
+`--default-artifact-root` defines where MLflow stores run artifacts.
+
+In this lab:
+
+`./mlruns`
+
+means that artifacts are stored locally inside the `mlruns` folder.
+
+The difference is that metadata describes the run and its results, while artifacts are the actual files produced by the run, such as trained models or other output files.
+
+
