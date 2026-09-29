@@ -37,10 +37,62 @@ After running `dvc add data`, DVC added `/data` to the `.gitignore` file.
 
 This means Git will ignore the actual dataset files because they are managed by DVC. Git will only track the DVC metadata file that represents the dataset.
 
-Question 5
+## Question 5
 
-Yes, DVC created a `data.dvc` file.
+Yes, after running `dvc add data`, a file named `data.dvc` is created.
 
-This file contains metadata about the tracked `data` directory, such as its hash, size, number of files, and path.
+This file is a DVC pointer file. It does not contain the dataset itself.
 
-The hash identifies the exact version of the dataset. The `data.dvc` file is tracked by Git, while the actual dataset is stored and versioned by DVC.
+It contains metadata about the tracked data, such as:
+- the hash of the data
+- the size of the tracked data
+- the path of the tracked folder
+
+Git tracks `data.dvc`, while DVC uses the information inside it to identify the correct version of the actual data stored in the DVC cache or remote storage.
+
+## Question 6
+
+On the GitHub main branch, the project code is present.
+
+The actual `data` folder is not present on GitHub because it is ignored by Git and managed by DVC instead.
+
+The file `data.dvc` is present on GitHub. This file acts as a pointer to the version of the dataset tracked by DVC.
+
+In my case, the actual dataset is not stored on DagsHub because I used the recommended workaround from the lab: a local DVC remote outside the Git repository.
+
+The real data is stored in:
+
+`C:\Users\mahmo\Desktop\mlops-lab-1-dvc-storage`
+
+So:
+- GitHub stores the code and DVC pointer files.
+- The local DVC remote stores the actual dataset.
+
+## Question 7
+
+After cloning the GitHub repository into a new folder, the actual `data` folder is not downloaded automatically.
+
+This happens because Git only contains the project code and the `data.dvc` pointer file, while the actual dataset is managed by DVC.
+
+To retrieve the data, the command needed is:
+
+`dvc pull`
+
+In my case, `dvc pull` retrieves the dataset from the local DVC remote configured outside the Git repository.
+
+## Question 8
+
+After switching to the older commit that contained the previous version of `data.dvc` and running:
+
+`dvc checkout`
+
+the new folders:
+
+- `food11_processed`
+- `food11_processed_mini`
+
+disappeared from the `data` folder.
+
+Only the older tracked dataset, `food11_raw`, remained.
+
+This shows that Git controls which version of the `data.dvc` pointer file is active, while DVC updates the actual data in the workspace to match that version.
