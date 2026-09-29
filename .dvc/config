@@ -1,2 +1,7 @@
 [core]
-    remote = origin
+    remote = localstorage
+['remote "origin-s3"']
+    url = s3://dvc
+    endpointurl = https://dagshub.com/aliiimansourrr/mlops-lab-1.s3
+['remote "localstorage"']
+    url = C:\Users\mahmo\Desktop\mlops-lab-1-dvc-storage
