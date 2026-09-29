@@ -191,3 +191,85 @@ The `step` identifies when the metric was measured, for example the epoch number
 
 Parameters do not need a `step` because they remain fixed for the run.
 
+## Question 6
+
+In the MLflow UI, the run shows the logged parameters, metrics, and the trained model artifact.
+
+The parameters include:
+- dataset = `mini`
+- epochs = `5`
+- lr = `0.001`
+- batch_size = `32`
+- model = `resnet18`
+
+The logged metrics include:
+- `train_loss`
+- `val_loss`
+- `val_accuracy`
+- `test_accuracy`
+
+For the successful run, the final values included approximately:
+- `val_accuracy = 0.5648`
+- `test_accuracy = 0.5703`
+
+The trained model was also logged successfully.
+
+Because the MLflow server was started with:
+
+`--default-artifact-root ./mlruns`
+
+the model artifact is stored locally under the project's `mlruns` folder.
+
+For this run, the model artifact is located at:
+
+`C:\Users\mahmo\Desktop\mlops-lab-1\mlruns\1\models\m-346856dd700f4374a9fdf175e0a97b55\artifacts`
+
+and the serialized PyTorch model file is:
+
+`C:\Users\mahmo\Desktop\mlops-lab-1\mlruns\1\models\m-346856dd700f4374a9fdf175e0a97b55\artifacts\data\model.pth`
+
+## Question 7
+
+After comparing the runs in the MLflow UI, the learning rate that gave the best validation accuracy was:
+
+`lr = 0.0001`
+
+with a validation accuracy of approximately:
+
+`0.7153`
+
+The higher learning rate was not always better.
+
+For example:
+- `lr = 0.01` gave a very low validation accuracy of about `0.12`
+- `lr = 0.001` performed much better
+- `lr = 0.0001` gave the best result among the tested learning rates
+
+This shows that increasing the learning rate does not necessarily improve model performance.
+
+## Question 8
+
+The parallel coordinates plot shows that the learning rate has a strong effect on validation accuracy.
+
+The best combination among the tested runs was:
+
+- `lr = 0.0001`
+- `batch_size = 32`
+
+which achieved a validation accuracy of approximately `0.7153`.
+
+With `batch_size = 32`, increasing the learning rate from `0.0001` to `0.001` reduced the validation accuracy, and increasing it further to `0.01` caused a very large drop in performance.
+
+Changing the batch size from 32 to 64 while keeping `lr = 0.001` also changed the validation accuracy, but in these experiments the learning rate had the clearest effect.
+
+## Question 9
+
+After sorting the runs by `val_accuracy` in descending order, the best run was:
+
+- Run name: `adaptable-shrimp-359`
+- Run ID: `0266da079d164fe2adfb3e334b648cad`
+- Learning rate: `0.0001`
+- Batch size: `32`
+- Best validation accuracy: approximately `0.7153`
+
+I noted the run ID because it will be needed in the next lab.
