@@ -4,7 +4,7 @@ FROM python:3.12-slim AS builder
 WORKDIR /app
 
 # Install uv
-RUN pip install uv
+RUN pip install --timeout 180 --retries 10 uv
 
 # Copy dependency files first for better Docker layer caching
 COPY pyproject.toml uv.lock ./
