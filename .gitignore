@@ -3,3 +3,9 @@ mlflow.db
 mlruns/
 __pycache__/
 mlartifacts/
+
+# Lab 4 local backups and temporary files
+lab4-backup/
+lab4_artifact_test.txt
+mlflow/Dockerfile.txt
+test_mlflow_artifacts.py
