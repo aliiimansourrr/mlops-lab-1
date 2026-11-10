@@ -8,3 +8,4 @@ This repository contains the implementation and answers for MLOps Labs 1 to 4.
 - [Lab 2 - Answers](README2.md)
 - [Lab 3 - Answers](README3.md)
 - [Lab 4 - Answers](README4.md)
+- [Lab 5 - Answers](README5.md)
