@@ -1,13 +1,15 @@
+
 import os
 from io import BytesIO
+from typing import Annotated
 
-import mlflow
 import mlflow.pyfunc
 import numpy as np
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image
 from torchvision import transforms
 
+import mlflow
 
 MLFLOW_TRACKING_URI = os.getenv(
     "MLFLOW_TRACKING_URI",
@@ -18,9 +20,10 @@ mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 MODEL_URI = "models:/food11@champion"
 
-model = mlflow.pyfunc.load_model(MODEL_URI)
-
 app = FastAPI()
+
+# The model will be loaded when FastAPI starts.
+model = None
 
 
 CLASSES = [
@@ -48,21 +51,39 @@ transform = transforms.Compose([
 ])
 
 
+@app.on_event("startup")
+def load_model():
+    global model
+
+    if os.environ.get("SKIP_MODEL"):
+        model = None
+        print("SKIP_MODEL enabled: skipping MLflow model loading")
+        return
+
+    print(f"Loading model from {MODEL_URI}")
+    model = mlflow.pyfunc.load_model(MODEL_URI)
+    print("Model loaded successfully")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
-    contents = await file.read()
+async def predict(file: Annotated[UploadFile, File()]):
+    if model is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Model is not loaded",
+        )
 
+    contents = await file.read()
     image = Image.open(BytesIO(contents)).convert("RGB")
 
     tensor = transform(image).unsqueeze(0)
 
     predictions = model.predict(tensor.numpy())
-
     predictions = np.asarray(predictions)
 
     if predictions.ndim == 2:

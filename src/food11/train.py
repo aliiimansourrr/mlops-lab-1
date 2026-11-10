@@ -1,13 +1,15 @@
+
 import argparse
 from pathlib import Path
 
-import mlflow
 import mlflow.pytorch
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import ResNet18_Weights, resnet18
+
+import mlflow
 
 
 def parse_args():
@@ -16,32 +18,31 @@ def parse_args():
     parser.add_argument(
         "--dataset",
         choices=["processed", "mini"],
-        default="mini"
+        default="mini",
     )
 
     parser.add_argument(
         "--epochs",
         type=int,
-        default=5
+        default=5,
     )
 
     parser.add_argument(
         "--lr",
         type=float,
-        default=0.001
+        default=0.001,
     )
 
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=32
+        default=32,
     )
 
     return parser.parse_args()
 
 
 def create_dataloaders(dataset_name, batch_size):
-
     if dataset_name == "mini":
         data_root = Path("data/food11_processed_mini")
     else:
@@ -49,51 +50,49 @@ def create_dataloaders(dataset_name, batch_size):
 
     transform = transforms.Compose([
         transforms.ToTensor(),
-
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        )
+            std=[0.229, 0.224, 0.225],
+        ),
     ])
 
     train_dataset = datasets.ImageFolder(
         data_root / "training",
-        transform=transform
+        transform=transform,
     )
 
     val_dataset = datasets.ImageFolder(
         data_root / "validation",
-        transform=transform
+        transform=transform,
     )
 
     test_dataset = datasets.ImageFolder(
         data_root / "evaluation",
-        transform=transform
+        transform=transform,
     )
 
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=True
+        shuffle=True,
     )
 
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
-        shuffle=False
+        shuffle=False,
     )
 
     test_loader = DataLoader(
         test_dataset,
         batch_size=batch_size,
-        shuffle=False
+        shuffle=False,
     )
 
     return train_loader, val_loader, test_loader
 
 
 def create_model():
-
     weights = ResNet18_Weights.DEFAULT
 
     model = resnet18(weights=weights)
@@ -102,31 +101,27 @@ def create_model():
     # Food-11 has only 11 classes.
     model.fc = nn.Linear(
         model.fc.in_features,
-        11
+        11,
     )
 
     return model
 
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
-
     model.train()
 
     total_loss = 0.0
 
     for images, labels in loader:
-
         images = images.to(device)
         labels = labels.to(device)
 
         optimizer.zero_grad()
 
         outputs = model(images)
-
         loss = criterion(outputs, labels)
 
         loss.backward()
-
         optimizer.step()
 
         total_loss += loss.item()
@@ -135,7 +130,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
 
 
 def evaluate(model, loader, criterion, device):
-
     model.eval()
 
     total_loss = 0.0
@@ -143,14 +137,11 @@ def evaluate(model, loader, criterion, device):
     total = 0
 
     with torch.no_grad():
-
         for images, labels in loader:
-
             images = images.to(device)
             labels = labels.to(device)
 
             outputs = model(images)
-
             loss = criterion(outputs, labels)
 
             total_loss += loss.item()
@@ -164,14 +155,12 @@ def evaluate(model, loader, criterion, device):
             total += labels.size(0)
 
     average_loss = total_loss / len(loader)
-
     accuracy = correct / total
 
     return average_loss, accuracy
 
 
 def main():
-
     args = parse_args()
 
     mlflow.set_tracking_uri(
@@ -189,45 +178,42 @@ def main():
 
     train_loader, val_loader, test_loader = create_dataloaders(
         args.dataset,
-        args.batch_size
+        args.batch_size,
     )
 
     model = create_model()
-
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss()
 
     optimizer = torch.optim.Adam(
         model.parameters(),
-        lr=args.lr
+        lr=args.lr,
     )
 
     with mlflow.start_run():
-
         mlflow.log_params({
             "dataset": args.dataset,
             "epochs": args.epochs,
             "lr": args.lr,
             "batch_size": args.batch_size,
-            "model": "resnet18"
+            "model": "resnet18",
         })
 
         for epoch in range(args.epochs):
-
             train_loss = train_one_epoch(
                 model,
                 train_loader,
                 criterion,
                 optimizer,
-                device
+                device,
             )
 
             val_loss, val_accuracy = evaluate(
                 model,
                 val_loader,
                 criterion,
-                device
+                device,
             )
 
             print(
@@ -240,26 +226,27 @@ def main():
             mlflow.log_metric(
                 "train_loss",
                 train_loss,
-                step=epoch
+                step=epoch,
             )
 
             mlflow.log_metric(
                 "val_loss",
                 val_loss,
-                step=epoch
+                step=epoch,
             )
 
             mlflow.log_metric(
                 "val_accuracy",
                 val_accuracy,
-                step=epoch
+                step=epoch,
             )
 
-        test_loss, test_accuracy = evaluate(
+        # Final evaluation on the test dataset
+        _test_loss, test_accuracy = evaluate(
             model,
             test_loader,
             criterion,
-            device
+            device,
         )
 
         print(
@@ -267,22 +254,17 @@ def main():
             f"{test_accuracy:.4f}"
         )
 
+        # Log the final test accuracy only once
         mlflow.log_metric(
             "test_accuracy",
-            test_accuracy
+            test_accuracy,
         )
 
-        input_example = torch.randn(1, 3, 128, 128)
-
-        mlflow.log_metric(
-            "test_accuracy",
-            test_accuracy
-        )
-
+        # Save the trained model to MLflow
         mlflow.pytorch.log_model(
             model,
             name="model",
-            serialization_format="pickle"
+            serialization_format="pickle",
         )
 
 

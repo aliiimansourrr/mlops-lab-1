@@ -1,7 +1,8 @@
-from pathlib import Path
-from PIL import Image
-import shutil
 
+import shutil
+from pathlib import Path
+
+from PIL import Image
 
 # Root folders
 RAW_DIR = Path("data/food11_raw")
@@ -26,6 +27,17 @@ CLASSES = [
     "Soup",
     "Vegetable-Fruit",
 ]
+
+
+def category_from_filename(filename: str) -> str:
+    """Return the Food-11 category from a filename."""
+    class_id = int(Path(filename).stem.split("_")[0])
+    return CLASSES[class_id]
+
+
+def resize_image(img: Image.Image, size: int = 128) -> Image.Image:
+    """Convert an image to RGB and resize it."""
+    return img.convert("RGB").resize((size, size))
 
 
 def prepare_output_folders():
@@ -62,9 +74,8 @@ def process_split(split):
 
         # Food-11 filenames start with the class number
         # Example: 0_123.jpg -> class 0 -> Bread
-        class_id = int(image_path.stem.split("_")[0])
-
-        class_name = CLASSES[class_id]
+        class_name = category_from_filename(image_path.name)
+        class_id = CLASSES.index(class_name)
 
         output_path = (
             PROCESSED_DIR
@@ -74,8 +85,7 @@ def process_split(split):
         )
 
         with Image.open(image_path) as image:
-            image = image.convert("RGB")
-            image = image.resize(IMAGE_SIZE)
+            image = resize_image(image, IMAGE_SIZE[0])
             image.save(output_path)
 
             # Add only the first 100 images of each class to mini
@@ -88,7 +98,6 @@ def process_split(split):
                 )
 
                 image.save(mini_path)
-
                 class_counts[class_id] += 1
 
 
